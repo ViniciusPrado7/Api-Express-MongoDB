@@ -2,6 +2,7 @@ import express from "express";
 import conectNaDataBase from "./config/dbConnect.js";
 import routes from "./routes/index.js";
 import manipuladorDerErros from "./middlewares/manipuladorDeErros.js";
+import manipulador404 from "./middlewares/manipulador404.js";
 
 const conexao = await conectNaDataBase();
 conexao.on("error", (erro) => {
@@ -14,6 +15,8 @@ conexao.once("open", () => {
 
 const app = express();
 routes(app);
+
+app.use(manipulador404);
 
 app.use(manipuladorDerErros);
 
