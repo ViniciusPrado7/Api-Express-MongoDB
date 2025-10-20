@@ -1,5 +1,5 @@
 import Erro404 from "../erros/Erro404.js";
-import {Livro} from "../models/index.js";
+import { Autor, Livro } from "../models/index.js";
 
 class LivroController {
   static listarLivros = async (req, res, next) => {
@@ -67,15 +67,43 @@ class LivroController {
     }
   };
 
-  static listarLivroPorEditora = async (req, res, next) => {
+  static listarLivroPorFiltro = async (req, res, next) => {
     try {
-      const editora = req.query.editora;
-      const livrosResultado = await Livro.find({ editora: editora });
+      const busca = await processaBusca(req.query);
+
+      const livrosResultado = await 
+      Livro.find(busca)
+      .populate("autor");
       res.status(200).send(livrosResultado);
     } catch (erro) {
       next(erro);
     }
   };
+}
+
+async function processaBusca(parametros) {
+  const { editora, titulo, minPaginas, maxPaginas, nomeAutor } = parametros;
+
+  const busca = {};
+
+  if (editora) busca.editora = editora;
+  if (titulo) busca.titulo = {$regex: titulo, $options: "i"};
+
+  if (minPaginas || maxPaginas) busca.paginas = {};
+
+  if (minPaginas) busca.paginas.$gte = minPaginas;
+  if (maxPaginas) busca.paginas.$lte = maxPaginas;
+
+  if(nomeAutor) {
+    const autor = await Autor.findOne({ nome: nomeAutor });
+
+    const autorId = autor._id;
+    
+
+    busca.autor = autorId
+  }
+
+  return busca;
 }
 
 export default LivroController;
